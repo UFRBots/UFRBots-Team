@@ -315,10 +315,23 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    // Robos da equipe amarelo = true;
-    // Robos da equipe azul = false;
-    bool Team_UFRBots = false;
-    //bool Team_Cruzeiro = false;
+    std::string BLUE = "BLUE";
+    std::string YELLOW = "YELLOW";
+
+    std::string color = argv[1];
+
+    bool Team_UFRBots;
+
+    if (color.compare(BLUE) == 0)
+    {
+        //    Time azul
+        Team_UFRBots = false;
+    }
+    if (color.compare(YELLOW) == 0)
+    {
+        //    Time amarelo
+        Team_UFRBots = true;
+    }
 
     // IP do simulador
     RoboCupSSLClient visionClient("224.0.0.1", 10002);
@@ -376,9 +389,6 @@ int main(int argc, char *argv[])
                 }
 
             }
-
-
-
 
             if (packet.has_frame())
             {
@@ -442,6 +452,10 @@ int main(int argc, char *argv[])
                             }
                         }
                      }
+                    else
+                    {
+                        commandClient.sendCommand(0, 0, Team_UFRBots, i);
+                    }
                   }
 
 
@@ -489,6 +503,10 @@ int main(int argc, char *argv[])
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        commandClient.sendCommand(0, 0, Team_UFRBots, i);
                     }
 
 
