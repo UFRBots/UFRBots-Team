@@ -1,8 +1,15 @@
 //author  Renato Sousa, 2018
 #include <QtNetwork>
 #include <stdio.h>
+#include <QtCore>
+#include <QUdpSocket>
+#include <iostream>
 #include "net/robocup_ssl_client.h"
 #include "net/grSim_client.h"
+
+// referee placement packets
+#include "include/vssref_placement.pb.h"
+#include "include/vssref_command.pb.h"
 
 #include "net/pb/command.pb.h"
 #include "net/pb/common.pb.h"
@@ -259,6 +266,50 @@ Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball)
     }
 }
 
+QString getFoulNameById(VSSRef::Foul foul){
+    switch(foul){
+        case VSSRef::Foul::FREE_BALL:    return "FREE_BALL";
+        case VSSRef::Foul::FREE_KICK:    return "FREE_KICK";
+        case VSSRef::Foul::GOAL_KICK:    return "GOAL_KICK";
+        case VSSRef::Foul::PENALTY_KICK: return "PENALTY_KICK";
+        case VSSRef::Foul::KICKOFF:      return "KICKOFF";
+        case VSSRef::Foul::STOP:         return "STOP";
+        case VSSRef::Foul::GAME_ON:      return "GAME_ON";
+        default:                         return "FOUL NOT IDENTIFIED";
+    }
+}
+
+QString getTeamColorNameById(VSSRef::Color color){
+    switch(color){
+        case VSSRef::Color::NONE:    return "NONE";
+        case VSSRef::Color::BLUE:    return "BLUE";
+        case VSSRef::Color::YELLOW:  return "YELLOW";
+        default:                     return "COLOR NOT IDENTIFIED";
+    }
+}
+
+QString getQuadrantNameById(VSSRef::Quadrant quadrant){
+    switch(quadrant){
+        case VSSRef::Quadrant::NO_QUADRANT: return "NO QUADRANT";
+        case VSSRef::Quadrant::QUADRANT_1:  return "QUADRANT 1";
+        case VSSRef::Quadrant::QUADRANT_2:  return "QUADRANT 2";
+        case VSSRef::Quadrant::QUADRANT_3:  return "QUADRANT 3";
+        case VSSRef::Quadrant::QUADRANT_4:  return "QUADRANT 4";
+        default:                            return "QUADRANT NOT IDENTIFIED";
+    }
+}
+
+QString getHalfNameById(VSSRef::Half half){
+    switch(half){
+        case VSSRef::Half::NO_HALF: return "NO_HALF";
+        case VSSRef::Half::FIRST_HALF: return "FIRST HALF";
+        case VSSRef::Half::SECOND_HALF: return "SECOND HALF";
+        default: return "NO HALF DEFINED";
+    }
+}
+
+
+
 int main(int argc, char *argv[])
 {
     (void)argc;
@@ -267,7 +318,7 @@ int main(int argc, char *argv[])
     // Robos da equipe amarelo = true;
     // Robos da equipe azul = false;
     bool Team_UFRBots = false;
-    bool Team_Cruzeiro = true;
+    //bool Team_Cruzeiro = false;
 
     // IP do simulador
     RoboCupSSLClient visionClient("224.0.0.1", 10002);
@@ -278,10 +329,57 @@ int main(int argc, char *argv[])
     // Pacotes de mensagens
     fira_message::sim_to_ref::Environment packet;
 
+
+    // QUdpSocket
+    QUdpSocket *refereeClient = new QUdpSocket();
+
+    // Bindando
+    if(refereeClient->bind(QHostAddress::AnyIPv4, 10003, QUdpSocket::ShareAddress) == false){
+        std::cout << "Failed to bind" << std::endl;
+        exit(-1);
+    }
+
+    // Conectando ao grupo multicast
+    if(refereeClient->joinMulticastGroup(QHostAddress("224.0.0.1")) == false){
+        std::cout << "Failed to join" << std::endl;
+        exit(-1);
+    }
+
+    bool game_on = false;
+
     while (true)
     {
         if (visionClient.receive(packet))
         {
+
+            while(refereeClient->hasPendingDatagrams()){
+                VSSRef::ref_to_team::VSSRef_Command command;
+                char *buffer = new char[65535];
+                long long int packetLength = 0;
+
+                packetLength = refereeClient->readDatagram(buffer, 65535);
+                if(command.ParseFromArray(buffer, int(packetLength)) == false){
+                    std::cout << "Error in parse" << std::endl;
+                    exit(-1);
+                }
+
+                // If received command, let's debug it
+                std::cout << "[Example] Succesfully received an command from ref: " << getFoulNameById(command.foul()).toStdString() << " for team " << getTeamColorNameById(command.teamcolor()).toStdString() << std::endl;
+                std::cout << getQuadrantNameById(command.foulquadrant()).toStdString() << std::endl;
+
+                if (getFoulNameById(command.foul()).toStdString() == "GAME_ON")
+                {
+                    game_on = true;
+                }
+                else{
+                    game_on = false;
+                }
+
+            }
+
+
+
+
             if (packet.has_frame())
             {
                 fira_message::Frame detection = packet.frame();
@@ -298,8 +396,8 @@ int main(int argc, char *argv[])
                 fira_message::Ball ball = detection.ball();
                 ball.set_x((length + ball.x()) * 100);
                 ball.set_y((width + ball.y()) * 100);
-                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
-                
+                //printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
+
                 // TIME AZUL
                 for (int i = 0; i < robots_blue_n; i++)
                 {
@@ -308,38 +406,42 @@ int main(int argc, char *argv[])
                     robot.set_y((width + robot.y()) * 100);
                     robot.set_orientation(to180range(robot.orientation()));
 //                    printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
-                    if(!Team_UFRBots)
+
+                    if(game_on)
                     {
-                        // Se for o robo 0
-                        if(i == 0)
+                        if(!Team_UFRBots)
                         {
-                            if(ball.x() < 50)
+                            // Se for o robo 0
+                            if(i == 0)
                             {
-                                Objective defensor = defineObjective(robot, ball);
-                                PID(robot, defensor, 0, commandClient, Team_UFRBots);
+                                if(ball.x() < 50)
+                                {
+                                    Objective defensor = defineObjective(robot, ball);
+                                    PID(robot, defensor, 0, commandClient, Team_UFRBots);
+                                }
+                                else
+                                {
+                                    Objective parado = Objective(15, 65, 0);
+                                    PID(robot, parado, 0, commandClient, Team_UFRBots);
+                                }
                             }
+                            // Caso contrário, robo 1 e 2
                             else
                             {
-                                Objective parado = Objective(15, 65, 0);
-                                PID(robot, parado, 0, commandClient, Team_UFRBots);
-                            }
-                        }
-                        // Caso contrário, robo 1 e 2
-                        else
-                        {
-                            Objective o = defineObjective(robot, ball);
+                                Objective o = defineObjective(robot, ball);
 
-                            if(ball.y() >= 65 && i == 1) {
-                                PID(robot, o, i, commandClient, Team_UFRBots);
-                            }
-                            if(ball.y() < 65 && i == 2) {
-                                PID(robot, o, i, commandClient, Team_UFRBots);
-                            }
-                            if(ball.x() <= 76 && i == 2) {
-                                PID(robot, o, i, commandClient, Team_UFRBots);
+                                if(ball.y() >= 65 && i == 1) {
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
+                                if(ball.y() < 65 && i == 2) {
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
+                                if(ball.x() <= 76 && i == 2) {
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
                             }
                         }
-                    }
+                     }
                   }
 
 
@@ -352,7 +454,10 @@ int main(int argc, char *argv[])
                         robot.set_y((width + robot.y()) * 100);
                         robot.set_orientation(to180range(robot.orientation()));
     //                    printf("-Robot(B) (%2d/%2d): ", i + 1, robots_yellow_n);
-                        if(Team_Cruzeiro)
+
+                    if(game_on)
+                    {
+                        if(Team_UFRBots)
                         {
                             // Se for o robo 0
                             if(i == 0)
@@ -360,12 +465,12 @@ int main(int argc, char *argv[])
                                 if(ball.x() > 120)
                                 {
                                     Objective defensor = defineObjective(robot, ball);
-                                    PID(robot, defensor, 0, commandClient, Team_Cruzeiro);
+                                    PID(robot, defensor, 0, commandClient, Team_UFRBots);
                                 }
                                 else
                                 {
                                     Objective parado = Objective(155, 65, 0);
-                                    PID(robot, parado, 0, commandClient, Team_Cruzeiro);
+                                    PID(robot, parado, 0, commandClient, Team_UFRBots);
                                 }
                             }
                             // Caso contrário, robo 1 e 2
@@ -374,42 +479,42 @@ int main(int argc, char *argv[])
                                 Objective o = defineObjective(robot, ball);
 
                                 if(ball.y() >= 65 && i == 1) {
-                                    PID(robot, o, i, commandClient, Team_Cruzeiro);
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                                 if(ball.y() < 65 && i == 2) {
-                                    PID(robot, o, i, commandClient, Team_Cruzeiro);
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                                 if(ball.x() >= 74 && i == 2) {
-                                    PID(robot, o, i, commandClient, Team_Cruzeiro);
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                             }
                         }
-
+                    }
 
 
                     //Blue robot info:
                     for (int i = 0; i < robots_blue_n; i++)
                     {
                         fira_message::Robot robot = detection.robots_blue(i);
-                        printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
-                        printRobotInfo(robot);
+                        //printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
+                        //printRobotInfo(robot);
                     }
                 }
             }
 
 
             //see if packet contains geometry data:
-            if (packet.has_field())
-            {
-                printf("-[Geometry Data]-------\n");
+//            if (packet.has_field())
+//            {
+//                printf("-[Geometry Data]-------\n");
 
-                const fira_message::Field &field = packet.field();
-                printf("Field Dimensions:\n");
-                printf("  -field_length=%f (mm)\n", field.length());
-                printf("  -field_width=%f (mm)\n", field.width());
-                printf("  -goal_width=%f (mm)\n", field.goal_width());
-                printf("  -goal_depth=%f (mm)\n", field.goal_depth());
-            }
+//                const fira_message::Field &field = packet.field();
+//                printf("Field Dimensions:\n");
+//                printf("  -field_length=%f (mm)\n", field.length());
+//                printf("  -field_width=%f (mm)\n", field.width());
+//                printf("  -goal_width=%f (mm)\n", field.goal_width());
+//                printf("  -goal_depth=%f (mm)\n", field.goal_depth());
+//            }
         }
     }
 
