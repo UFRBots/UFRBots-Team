@@ -535,27 +535,27 @@ int main(int argc, char *argv[])
                             // Se for o robo 0
                             if(i == 0)
                             {
-                                if(ball.x() <= 35)
+                                if(ball.x() <= 35 && ball.y() >= 47 && ball.y() <= 93)
                                 {
                                     Objective defensor = defineObjective(robot, ball);
                                     PID(robot, defensor, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() > 80 && ball.x() > 35)
+                                if(ball.y() > 88 && ball.x() > 35)
                                 {
-                                    Objective parado = Objective(17, 85, 0);
+                                    Objective parado = Objective(17, 82, 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() < 40 && ball.x() > 35)
+                                if(ball.y() < 52 && ball.x() > 35)
                                 {
-                                    Objective parado = Objective(17, 55, 0);
+                                    Objective parado = Objective(17, 58, 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() >= 40 && ball.y() <= 80 && ball.x() > 35)
+                                if(ball.y() >= 52 && ball.y() <= 88 && ball.x() > 35)
                                 {
-                                    Objective parado = Objective(17, ball.y(), 0);
+                                    Objective parado = Objective(20, ball.y(), 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
                             }
@@ -563,6 +563,7 @@ int main(int argc, char *argv[])
 
                             else
                             {
+
 
                                 if(ball.y() >= 64 && i == 1) {
                                     Objective o = defineObjective(robot, ball);
@@ -616,25 +617,25 @@ int main(int argc, char *argv[])
 
                         if(i == 0)
                         {
-                            if(ball.x() > 135)
+                            if(ball.x() > 135 && ball.y() >= 47 && ball.y() <= 93)
                             {
                                 Objective defensor = defineObjectiveYellow(robot, ball);
                                 PID(robot, defensor, i, commandClient, Team_UFRBots);
                             }
 
-                            if(ball.y() > 80 && ball.x() < 135)
+                            if(ball.y() > 88 && ball.x() < 135)
                             {
                                 Objective parado = Objective(153, 85, 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots);
                             }
 
-                            if(ball.y() < 40 && ball.x() < 135)
+                            if(ball.y() < 52 && ball.x() < 135)
                             {
                                 Objective parado = Objective(153, 55, 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots);
                             }
 
-                            if(ball.y() >= 40 && ball.y() <= 80 && ball.x() < 135)
+                            if(ball.y() >= 52 && ball.y() <= 88 && ball.x() < 135)
                             {
                                 Objective parado = Objective(153, ball.y(), 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots);
