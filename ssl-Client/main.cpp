@@ -169,27 +169,15 @@ int estadoant;
 double x, y, ang;
 double x_in, y_in;
 
-Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball, bool Team_UFRBots)
+Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball)
 {
     double distancia = sqrt(pow(robot.x() - ball.x(), 2) + pow(robot.y() - ball.y(), 2));
-    double a;
-    double b;
-    //calculo da distancia entre o jogador e a bola, por meio do módulo do vetor diferença!
-    if(!Team_UFRBots)
-    {
-        a = robot.x();
-        b = ball.x();
-    }
-    else
-    {
-        b = robot.x();
-        a = ball.x();
-    }
-    if (a < b)
+
+    if (robot.x() < ball.x())
     { //se o robô está atrás da bola
         estado = APROXIMA;
 
-        if ((robot.y() < ball.y() - 5 || robot.y() > ball.y() + 5) && robot.x() >= 22)
+        if ((robot.y() < ball.y() - 5 || robot.y() > ball.y() + 5) && robot.x() <= 22)
             //alinhando o robô com a bola!
             return Objective(ball.x() - 10, ball.y(), M_PI / 4.); // x,y,angle
 
@@ -278,6 +266,104 @@ Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball, bo
     }
 }
 
+
+Objective defineObjectiveYellow(fira_message::Robot robot, fira_message::Ball ball)
+{
+    double distancia = sqrt(pow(robot.x() - ball.x(), 2) + pow(robot.y() - ball.y(), 2));
+
+    if (robot.x() > ball.x())
+    { //se o robô está atrás da bola
+        estado = APROXIMA;
+
+        if ((robot.y() < ball.y() - 5 || robot.y() > ball.y() + 5) && robot.x() >= 148)
+            //alinhando o robô com a bola!
+            return Objective(ball.x() - 10, ball.y(), M_PI / 4.); // x,y,angle
+
+        else if (distancia < 8 && 49 < robot.y() && 83 > robot.y())
+        {
+            //Se o robô 'está' com a bola e está indo em direção ao gol
+            return Objective(ball.x(), ball.y(), M_PI / 4.);
+        }
+        else if (distancia < 8 && (43 > robot.y() || 83 < robot.y()))
+        {
+            //Se o robô 'está' com a bola e NÃO está indo em direção ao gol
+            return Objective(ball.x(), 66, M_PI / 4.);
+        }
+        else
+            return Objective(ball.x(), ball.y(), M_PI / 4.);
+        //no mais, corre atrás da bola...
+    }
+    else
+    {
+        switch (estado)
+        {
+
+        case APROXIMA:
+            //corre atras da bola ate chegar perto
+            if (distancia < 10)
+                estado = DECIDE_DESVIO;
+            x = ball.x() - 10;
+            y = ball.y();
+            ang = 0; // x,y,angle
+            break;
+
+        case DECIDE_DESVIO:
+            //desvia da bola, para voltar a ficar atrás dela
+            if (robot.y() - 10 > 6)
+                estado = SOBE;
+            else
+                estado = DESCE;
+            break;
+
+        case SOBE:
+            estadoant = SOBE;
+            estado = VOLTA;
+            x = ball.x() - 10;
+            y = ball.y() - 8;
+            x_in = robot.x();
+            y_in = robot.y();
+            ang = M_PI / 2.0; // x,y,angle
+            break;
+
+        case DESCE:
+            estadoant = DESCE;
+            estado = VOLTA;
+            x = ball.x() - 10;
+            y = ball.y() + 8;
+            x_in = robot.x();
+            y_in = robot.y();
+            ang = M_PI / 2.0; // x,y,angle
+
+            break;
+
+        case VOLTA:
+            if (robot.x() <= x_in + 16 || robot.x() >= 168)
+            {
+                //se ele andou 16 ou tá no limite do mapa
+                //fazendo_manobra = 0;
+                estado = APROXIMA;
+            }
+            if (estadoant == DESCE)
+            {
+                x = ball.x() + 16;
+                y = ball.y() + 8;
+                ang = M_PI; // x,y,angle */
+            }
+            else
+            {
+                x = ball.x() + 16;
+                y = ball.y() - 8;
+                ang = M_PI; // x,y,angle */
+            }
+            break;
+        }
+
+        return Objective(x, y, ang);
+    }
+}
+
+
+
 QString getFoulNameById(VSSRef::Foul foul){
     switch(foul){
         case VSSRef::Foul::FREE_BALL:    return "FREE_BALL";
@@ -338,6 +424,7 @@ int main(int argc, char *argv[])
     int vision_port = atoi(argv[5]); //10002
     int referee_port = atoi(argv[6]); //10003
     int replacer_port = atoi(argv[7]); //10004
+
     //Docker
     //sudo sh ufrbots.sh color multicast_ip command_ip command_port vision_port referee_port replacer_port
     //sudo sh ufrbots.sh BLUE 224.5.23.2 127.0.0.1 20011 10002 10003 10004
@@ -440,7 +527,6 @@ int main(int argc, char *argv[])
                     robot.set_x((length + robot.x()) * 100); // Convertendo para centimetros
                     robot.set_y((width + robot.y()) * 100);
                     robot.set_orientation(to180range(robot.orientation()));
-//                    printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
 
                     if(game_on)
                     {
@@ -449,117 +535,188 @@ int main(int argc, char *argv[])
                             // Se for o robo 0
                             if(i == 0)
                             {
-                                if(ball.x() < 50)
+                                if(ball.x() <= 35)
                                 {
-                                    Objective defensor = defineObjective(robot, ball, Team_UFRBots);
-                                    PID(robot, defensor, 0, commandClient, Team_UFRBots);
+                                    Objective defensor = defineObjective(robot, ball);
+                                    PID(robot, defensor, i, commandClient, Team_UFRBots);
                                 }
-                                else
+
+                                if(ball.y() > 80 && ball.x() > 35)
                                 {
-                                    Objective parado = Objective(15, 65, 0);
-                                    PID(robot, parado, 0, commandClient, Team_UFRBots);
+                                    Objective parado = Objective(17, 85, 0);
+                                    PID(robot, parado, i, commandClient, Team_UFRBots);
+                                }
+
+                                if(ball.y() < 40 && ball.x() > 35)
+                                {
+                                    Objective parado = Objective(17, 55, 0);
+                                    PID(robot, parado, i, commandClient, Team_UFRBots);
+                                }
+
+                                if(ball.y() >= 40 && ball.y() <= 80 && ball.x() > 35)
+                                {
+                                    Objective parado = Objective(17, ball.y(), 0);
+                                    PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
                             }
-                            // Caso contrário, robo 1 e 2
+
+
                             else
                             {
-                                Objective o = defineObjective(robot, ball, Team_UFRBots);
 
-                                if(ball.y() >= 65 && i == 1) {
+                                if(ball.y() >= 64 && i == 1) {
+                                    Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
-                                if(ball.y() < 65 && i == 2) {
+
+                                if(ball.y() < 64 && ball.x() > 84 && i == 2) {
+                                    Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
+
+                                if(ball.y() < 65 && i == 1) {
+                                    Objective marcadorAvancado = Objective(85, ball.y(), 0);
+                                    PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots);
+                                }
+
+                                if(ball.y() >= 65 && ball.x() > 84 && i == 2) {
+                                    Objective marcadorRecuado = Objective(70, ball.y(), 0);
+                                    PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots);
+                                }
+
                                 if(ball.x() <= 84 && i == 2) {
+                                    Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                             }
                         }
                      }
+
                     else
                     {
                         commandClient.sendCommand(0, 0, Team_UFRBots, i);
                     }
-                  }
+
+                }
 
 
+                // TIME AMARELO
+                for (int i = 0; i < robots_yellow_n; i++)
+                {
+                    fira_message::Robot robot = detection.robots_yellow(i); // Detecção do robo
+                    robot.set_x((length + robot.x()) * 100); // Convertendo para centimetros
+                    robot.set_y((width + robot.y()) * 100);
+                    robot.set_orientation(to180range(robot.orientation()));
+                    printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
 
-                    // TIME AMARELO
-                    for (int i = 0; i < robots_yellow_n; i++)
+                if(game_on)
+                {
+                    if(Team_UFRBots)
                     {
-                        fira_message::Robot robot = detection.robots_yellow(i); // Detecção do robo
-                        robot.set_x((length + robot.x()) * 100); // Convertendo para centimetros
-                        robot.set_y((width + robot.y()) * 100);
-                        robot.set_orientation(to180range(robot.orientation()));
-    //                    printf("-Robot(B) (%2d/%2d): ", i + 1, robots_yellow_n);
 
-                    if(game_on)
-                    {
-                        if(Team_UFRBots)
+                        if(i == 0)
                         {
-                            // Se for o robo 0
-                            if(i == 0)
+                            if(ball.x() > 135)
                             {
-                                if(ball.x() > 120)
-                                {
-                                    Objective defensor = defineObjective(robot, ball, Team_UFRBots);
-                                    PID(robot, defensor, 0, commandClient, Team_UFRBots);
-                                }
-                                else
-                                {
-                                    Objective parado = Objective(155, 65, 0);
-                                    PID(robot, parado, 0, commandClient, Team_UFRBots);
-                                }
+                                Objective defensor = defineObjectiveYellow(robot, ball);
+                                PID(robot, defensor, i, commandClient, Team_UFRBots);
                             }
-                            // Caso contrário, robo 1 e 2
-                            else
-                            {
-                                Objective o = defineObjective(robot, ball, Team_UFRBots);
 
-                                if(ball.y() >= 65 && i == 1) {
-                                    PID(robot, o, i, commandClient, Team_UFRBots);
-                                }
-                                if(ball.y() < 65 && i == 2) {
-                                    PID(robot, o, i, commandClient, Team_UFRBots);
-                                }
-                                if(ball.x() >= 86 && i == 2) {
-                                    PID(robot, o, i, commandClient, Team_UFRBots);
-                                }
+                            if(ball.y() > 80 && ball.x() < 135)
+                            {
+                                Objective parado = Objective(153, 85, 0);
+                                PID(robot, parado, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.y() < 40 && ball.x() < 135)
+                            {
+                                Objective parado = Objective(153, 55, 0);
+                                PID(robot, parado, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.y() >= 40 && ball.y() <= 80 && ball.x() < 135)
+                            {
+                                Objective parado = Objective(153, ball.y(), 0);
+                                PID(robot, parado, i, commandClient, Team_UFRBots);
                             }
                         }
-                    }
-                    else
-                    {
-                        commandClient.sendCommand(0, 0, Team_UFRBots, i);
-                    }
 
 
-                    //Blue robot info:
-                    for (int i = 0; i < robots_blue_n; i++)
-                    {
-                        fira_message::Robot robot = detection.robots_blue(i);
-                        printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
-                        printRobotInfo(robot);
+                        else
+                        {
+
+                            if(ball.y() >= 64 && i == 1) {
+                                Objective o = defineObjectiveYellow(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.y() < 64 && ball.x() < 86 && i == 2) {
+                                Objective o = defineObjectiveYellow(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.y() < 65 && i == 1) {
+                                Objective marcadorAvancado = Objective(85, ball.y(), 0);
+                                PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.y() >= 65 && ball.x() < 86 && i == 2) {
+                                Objective marcadorRecuado = Objective(100, ball.y(), 0);
+                                PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots);
+                            }
+
+                            if(ball.x() >= 86 && i == 2) {
+                                Objective o = defineObjectiveYellow(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots);
+                            }
+                        }
+
+                        // Se for o robo 0
+//                        if(i == 0)
+//                        {
+//                            if(ball.x() > 120)
+//                            {
+//                                Objective defensor = defineObjective(robot, ball, Team_UFRBots);
+//                                PID(robot, defensor, 0, commandClient, Team_UFRBots);
+//                            }
+//                            else
+//                            {
+//                                Objective parado = Objective(155, 65, 0);
+//                                PID(robot, parado, 0, commandClient, Team_UFRBots);
+//                            }
+//                        }
+//                        // Caso contrário, robo 1 e 2
+//                        else
+//                        {
+//                            Objective o = defineObjective(robot, ball, Team_UFRBots);
+
+//                            if(ball.y() >= 65 && i == 1) {
+//                                PID(robot, o, i, commandClient, Team_UFRBots);
+//                            }
+//                            if(ball.y() < 65 && i == 2) {
+//                                PID(robot, o, i, commandClient, Team_UFRBots);
+//                            }
+//                            if(ball.x() >= 86 && i == 2) {
+//                                PID(robot, o, i, commandClient, Team_UFRBots);
+//                            }
+//                        }
+//                    }
+//                }
+//                    else
+//                    {
+//                        commandClient.sendCommand(0, 0, Team_UFRBots, i);
+//                    }
+
+
+
                     }
                 }
+
             }
-
-
-            //see if packet contains geometry data:
-//            if (packet.has_field())
-//            {
-//                printf("-[Geometry Data]-------\n");
-
-//                const fira_message::Field &field = packet.field();
-//                printf("Field Dimensions:\n");
-//                printf("  -field_length=%f (mm)\n", field.length());
-//                printf("  -field_width=%f (mm)\n", field.width());
-//                printf("  -goal_width=%f (mm)\n", field.goal_width());
-//                printf("  -goal_depth=%f (mm)\n", field.goal_depth());
-//            }
+        }
         }
     }
+
 
     return 0;
 }
