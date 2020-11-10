@@ -37,7 +37,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = main1.0.0
-DISTDIR = /home/ejziel/Projetos/UFRBots/ufrbots-fira-client/ssl-Client/.tmp/main1.0.0
+DISTDIR = /home/ejziel/Projetos/UFRBots/UFRBots-Team/ssl-Client/.tmp/main1.0.0
 LINK          = g++
 LFLAGS        = 
 LIBS          = $(SUBLIBS) -L/usr/local/lib -lprotobuf -lz /usr/lib/x86_64-linux-gnu/libQt5Gui.so /usr/lib/x86_64-linux-gnu/libQt5Network.so /usr/lib/x86_64-linux-gnu/libQt5Core.so -lGL -lpthread   
@@ -406,7 +406,7 @@ moc_grSim_client.cpp: net/grSim_client.h \
 		net/pb/replacement.pb.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/ejziel/Projetos/UFRBots/ufrbots-fira-client/ssl-Client/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ejziel/Projetos/UFRBots/ufrbots-fira-client/ssl-Client -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include net/grSim_client.h -o moc_grSim_client.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/ejziel/Projetos/UFRBots/UFRBots-Team/ssl-Client/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ejziel/Projetos/UFRBots/UFRBots-Team/ssl-Client -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include net/grSim_client.h -o moc_grSim_client.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:

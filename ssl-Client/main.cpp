@@ -169,11 +169,23 @@ int estadoant;
 double x, y, ang;
 double x_in, y_in;
 
-Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball)
+Objective defineObjective(fira_message::Robot robot, fira_message::Ball ball, bool Team_UFRBots)
 {
     double distancia = sqrt(pow(robot.x() - ball.x(), 2) + pow(robot.y() - ball.y(), 2));
+    double a;
+    double b;
     //calculo da distancia entre o jogador e a bola, por meio do módulo do vetor diferença!
-    if (robot.x() < ball.x())
+    if(!Team_UFRBots)
+    {
+        a = robot.x();
+        b = ball.x();
+    }
+    else
+    {
+        b = robot.x();
+        a = ball.x();
+    }
+    if (a < b)
     { //se o robô está atrás da bola
         estado = APROXIMA;
 
@@ -318,7 +330,20 @@ int main(int argc, char *argv[])
     std::string BLUE = "BLUE";
     std::string YELLOW = "YELLOW";
 
-    std::string color = argv[1];
+    std::string color = argv[1]; //YELLOW or BLUE
+    std::string multicast_ip = argv[2]; // 224.0.0.1
+    QString multicast_ip_q = argv[2];// 224.0.0.1
+    QString command_ip = argv[3]; //127.0.0.1
+    int command_port = atoi(argv[4]); //20011
+    int vision_port = atoi(argv[5]); //10002
+    int referee_port = atoi(argv[6]); //10003
+    int replacer_port = atoi(argv[7]); //10004
+    //Docker
+    //sudo sh ufrbots.sh color multicast_ip command_ip command_port vision_port referee_port replacer_port
+    //sudo sh ufrbots.sh BLUE 224.5.23.2 127.0.0.1 20011 10002 10003 10004
+
+    //Local
+    // ./main BLUE 224.5.23.2 127.0.0.1 20011 10002 10003 10004
 
     bool Team_UFRBots;
 
@@ -334,10 +359,10 @@ int main(int argc, char *argv[])
     }
 
     // IP do simulador
-    RoboCupSSLClient visionClient("224.0.0.1", 10002);
+    RoboCupSSLClient visionClient(multicast_ip, vision_port);
     visionClient.open(false);
 
-    GrSim_Client commandClient("127.0.0.1", 20011);
+    GrSim_Client commandClient(command_ip, command_port);
 
     // Pacotes de mensagens
     fira_message::sim_to_ref::Environment packet;
@@ -347,13 +372,13 @@ int main(int argc, char *argv[])
     QUdpSocket *refereeClient = new QUdpSocket();
 
     // Bindando
-    if(refereeClient->bind(QHostAddress::AnyIPv4, 10003, QUdpSocket::ShareAddress) == false){
+    if(refereeClient->bind(QHostAddress::AnyIPv4, referee_port, QUdpSocket::ShareAddress) == false){
         std::cout << "Failed to bind" << std::endl;
         exit(-1);
     }
 
     // Conectando ao grupo multicast
-    if(refereeClient->joinMulticastGroup(QHostAddress("224.0.0.1")) == false){
+    if(refereeClient->joinMulticastGroup(QHostAddress(multicast_ip_q)) == false){
         std::cout << "Failed to join" << std::endl;
         exit(-1);
     }
@@ -406,7 +431,7 @@ int main(int argc, char *argv[])
                 fira_message::Ball ball = detection.ball();
                 ball.set_x((length + ball.x()) * 100);
                 ball.set_y((width + ball.y()) * 100);
-                //printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
+                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
 
                 // TIME AZUL
                 for (int i = 0; i < robots_blue_n; i++)
@@ -426,7 +451,7 @@ int main(int argc, char *argv[])
                             {
                                 if(ball.x() < 50)
                                 {
-                                    Objective defensor = defineObjective(robot, ball);
+                                    Objective defensor = defineObjective(robot, ball, Team_UFRBots);
                                     PID(robot, defensor, 0, commandClient, Team_UFRBots);
                                 }
                                 else
@@ -438,7 +463,7 @@ int main(int argc, char *argv[])
                             // Caso contrário, robo 1 e 2
                             else
                             {
-                                Objective o = defineObjective(robot, ball);
+                                Objective o = defineObjective(robot, ball, Team_UFRBots);
 
                                 if(ball.y() >= 65 && i == 1) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
@@ -446,7 +471,7 @@ int main(int argc, char *argv[])
                                 if(ball.y() < 65 && i == 2) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
-                                if(ball.x() <= 76 && i == 2) {
+                                if(ball.x() <= 84 && i == 2) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                             }
@@ -478,7 +503,7 @@ int main(int argc, char *argv[])
                             {
                                 if(ball.x() > 120)
                                 {
-                                    Objective defensor = defineObjective(robot, ball);
+                                    Objective defensor = defineObjective(robot, ball, Team_UFRBots);
                                     PID(robot, defensor, 0, commandClient, Team_UFRBots);
                                 }
                                 else
@@ -490,7 +515,7 @@ int main(int argc, char *argv[])
                             // Caso contrário, robo 1 e 2
                             else
                             {
-                                Objective o = defineObjective(robot, ball);
+                                Objective o = defineObjective(robot, ball, Team_UFRBots);
 
                                 if(ball.y() >= 65 && i == 1) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
@@ -498,7 +523,7 @@ int main(int argc, char *argv[])
                                 if(ball.y() < 65 && i == 2) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
-                                if(ball.x() >= 74 && i == 2) {
+                                if(ball.x() >= 86 && i == 2) {
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
                             }
@@ -514,8 +539,8 @@ int main(int argc, char *argv[])
                     for (int i = 0; i < robots_blue_n; i++)
                     {
                         fira_message::Robot robot = detection.robots_blue(i);
-                        //printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
-                        //printRobotInfo(robot);
+                        printf("-Robot(B) (%2d/%2d): ", i + 1, robots_blue_n);
+                        printRobotInfo(robot);
                     }
                 }
             }
