@@ -62,16 +62,16 @@ class Objective
         }
 };
 
-void printRobotInfo(const fira_message::Robot &robot)
-{
-    printf("ID=%3d \n", robot.robot_id());
+//void printRobotInfo(const fira_message::Robot &robot)
+//{
+//    printf("ID=%3d \n", robot.robot_id());
 
-    printf(" POS=<%9.2f,%9.2f> \n", robot.x(), robot.y());
-    printf(" VEL=<%9.2f,%9.2f> \n", robot.vx(), robot.vy());
+//    printf(" POS=<%9.2f,%9.2f> \n", robot.x(), robot.y());
+//    printf(" VEL=<%9.2f,%9.2f> \n", robot.vx(), robot.vy());
 
-    printf("ANGLE=%6.3f \n", robot.orientation());
-    printf("ANGLE VEL=%6.3f \n", robot.vorientation());
-}
+//    printf("ANGLE=%6.3f \n", robot.orientation());
+//    printf("ANGLE VEL=%6.3f \n", robot.vorientation());
+//}
 
 double to180range(double angle)
 {
@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
                 fira_message::Ball ball = detection.ball();
                 ball.set_x((length + ball.x()) * 100);
                 ball.set_y((width + ball.y()) * 100);
-                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
+//                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
 
                 // TIME AZUL
                 for (int i = 0; i < robots_blue_n; i++)
@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
                     robot.set_x((length + robot.x()) * 100); // Convertendo para centimetros
                     robot.set_y((width + robot.y()) * 100);
                     robot.set_orientation(to180range(robot.orientation()));
-                    printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
+//                    printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
 
                 if(game_on)
                 {
