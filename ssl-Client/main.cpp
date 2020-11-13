@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
                 fira_message::Ball ball = detection.ball();
                 ball.set_x((length + ball.x()) * 100);
                 ball.set_y((width + ball.y()) * 100);
-//                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
+                printf("-Ball:  POS=<%9.2f,%9.2f> \n", ball.x(), ball.y());
 
                 // TIME AZUL
                 for (int i = 0; i < robots_blue_n; i++)
@@ -535,59 +535,106 @@ int main(int argc, char *argv[])
                             // Se for o robo 0
                             if(i == 0)
                             {
-                                if(ball.x() <= 35 && ball.y() >= 47 && ball.y() <= 93)
+                                if(ball.x() <= 45 && ball.y() >= 44 && ball.y() <= 86)
                                 {
                                     Objective defensor = defineObjective(robot, ball);
                                     PID(robot, defensor, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() > 88 && ball.x() > 35)
+                                else if(ball.y() > 86 && ball.x() > 45)
                                 {
-                                    Objective parado = Objective(17, 82, 0);
+                                    Objective parado = Objective(20, 86, 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() < 52 && ball.x() > 35)
+                                else if(ball.y() < 44 && ball.x() > 45)
                                 {
-                                    Objective parado = Objective(17, 58, 0);
+                                    Objective parado = Objective(20, 44, 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() >= 52 && ball.y() <= 88 && ball.x() > 35)
+                                else if(ball.x() > 45 && ball.y() >= 44 && ball.y() <= 86)
                                 {
                                     Objective parado = Objective(20, ball.y(), 0);
                                     PID(robot, parado, i, commandClient, Team_UFRBots);
                                 }
+                                else
+                                {
+                                    if(ball.y() > 65)
+                                    {
+                                        Objective parado = Objective(20, 86, 0);
+                                        PID(robot, parado, i, commandClient, Team_UFRBots);
+                                    }
+                                    if(ball.y() <= 65)
+                                    {
+                                        Objective parado = Objective(20, 44, 0);
+                                        PID(robot, parado, i, commandClient, Team_UFRBots);
+                                    }
+                                }
                             }
-
 
                             else
                             {
 
-
-                                if(ball.y() >= 64 && i == 1) {
+//                                Se robo 1 no campo de ataque e bola no lado esquerdo
+                                if(ball.y() >= 64 && ball.x() > 45 && i == 1) {
                                     Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() < 64 && ball.x() > 84 && i == 2) {
+//                                Se robo 2 no campo de ataque e bola no lado direito
+                                else if(ball.y() < 64 && ball.x() > 86 && i == 2) {
                                     Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() < 65 && i == 1) {
-                                    Objective marcadorAvancado = Objective(85, ball.y(), 0);
+//                                Se robo 1 no campo de defesa e bola no lado direito
+                                else if(ball.y() < 64 && ball.x() <= 85 && ball.x() > 30 && i == 1) {
+                                    Objective marcadorAvancado = Objective(ball.x(), 96, 0);
                                     PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.y() >= 65 && ball.x() > 84 && i == 2) {
-                                    Objective marcadorRecuado = Objective(70, ball.y(), 0);
+//                                Se robo 1 no campo de ataque e bola no lado direito
+                                else if(ball.y() < 64 && ball.x() > 85 && i == 1) {
+                                    Objective marcadorAvancado = Objective((ball.x()-20), 96, 0);
+                                    PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots);
+                                }
+
+//                                Se robo 2 no campo de defesa e bola no lado esquerdo
+                                else if(ball.y() >= 64 && ball.x() <= 85 && i == 2) {
+                                    Objective marcadorRecuado = Objective(ball.x(), 32, 0);
                                     PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots);
                                 }
 
-                                if(ball.x() <= 84 && i == 2) {
+//                                Se robo 2 no campo de ataque e bola no lado esquerdo
+//                                mas antes da pequena area
+                                else if(ball.y() >= 64 && ball.x() > 85 && ball.x() <= 125 && i == 2) {
+                                    Objective marcadorRecuado = Objective((ball.x()-20), 32, 0);
+                                    PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots);
+                                }
+
+//                                Se robo 2 no campo de ataque e bola no lado esquerdo
+//                                mas na pequena area do adversario
+                                else if(ball.y() >= 64 && ball.x() > 125 && i == 2) {
                                     Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
+
+//                                Condicao de movimento para freeball quadrante Q2
+                                else if(ball.x() >= 45 && ball.x() <= 84 && ball.y() > 65 && i == 1 ) {
+                                    Objective o = defineObjective(robot, ball);
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
+
+//                                Condicao de movimento para freeball quadrante Q3
+                                else if(ball.x() >= 45 && ball.x() <= 84 && ball.y() <= 65 && i == 2 ) {
+                                    Objective o = defineObjective(robot, ball);
+                                    PID(robot, o, i, commandClient, Team_UFRBots);
+                                }
+
+                                else
+                                {
+                                    commandClient.sendCommand(0, 0, Team_UFRBots, i);
                                 }
                             }
                         }
