@@ -807,10 +807,10 @@ int main(int argc, char *argv[])
                             // Se for o robo 0
                             if(i == 0)
                             {
-                                if(ball.x() <= 45 && ball.y() >= 44 && ball.y() <= 86)
+                                if(ball.x() <= 45 && ball.y() >= 26 && ball.y() <= 102)
                                 {
                                     Objective defensor = defineObjective(robot, ball);
-                                    PID(robot, defensor, i, commandClient, Team_UFRBots, 5);
+                                    PID(robot, defensor, i, commandClient, Team_UFRBots, 0);
                                 }
 
                                 else if(ball.y() > 86 && ball.x() > 45)
@@ -863,7 +863,7 @@ int main(int argc, char *argv[])
                             {
 
 //                                Se robo 1 no campo de ataque e bola no lado esquerdo
-                                if(ball.y() >= 64 && ball.x() > 45 && i == 1 && !penalty) {
+                                if(ball.y() >= 64 && ball.x() > 30 && i == 1 && !penalty) {
                                     Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots, 10);
                                 }
@@ -874,7 +874,7 @@ int main(int argc, char *argv[])
                                 }
 
 //                                Se robo 2 no campo de ataque e bola no lado direito
-                                else if(ball.y() < 64 && ball.x() > 86 && i == 2) {
+                                else if(ball.y() < 64 && ball.x() > 30 && i == 2) {
                                     Objective o = defineObjective(robot, ball);
                                     PID(robot, o, i, commandClient, Team_UFRBots, 10);
                                 }
@@ -918,10 +918,10 @@ int main(int argc, char *argv[])
                                 }
 
 //                                Condicao de movimento para freeball quadrante Q3
-                                else if(ball.x() >= 45 && ball.x() <= 84 && ball.y() <= 65 && i == 2 ) {
-                                    Objective o = defineObjective(robot, ball);
-                                    PID(robot, o, i, commandClient, Team_UFRBots, 0);
-                                }
+//                                else if(ball.x() >= 45 && ball.x() <= 84 && ball.y() <= 65 && i == 2 ) {
+//                                    Objective o = defineObjective(robot, ball);
+//                                    PID(robot, o, i, commandClient, Team_UFRBots, 0);
+//                                }
 
                                 else
                                 {
