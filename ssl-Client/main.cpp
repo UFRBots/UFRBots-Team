@@ -513,6 +513,8 @@ int main(int argc, char *argv[])
                     game_on = false;
                 }
 
+
+
                 if(!Team_UFRBots && quadrante == "QUADRANT 3")
                 {
                     // First creating an placement command for the blue team
@@ -623,8 +625,8 @@ int main(int argc, char *argv[])
                         }
                         if (x==2)
                         {
-                            robot->set_x(-0.25);
-                            robot->set_y(-0.4);
+                            robot->set_x(-0.1);
+                            robot->set_y(-0.18);
                             robot->set_orientation(0.0);
                         }
 
@@ -636,6 +638,134 @@ int main(int argc, char *argv[])
                     std::string msgBlue;
                     placementCommandBlue.SerializeToString(&msgBlue);
                     if(replacerSocket->write(msgBlue.c_str(), msgBlue.length()) == -1){
+                        std::cout << "[Example] Failed to write to replacer socket: " << replacerSocket->errorString().toStdString() << std::endl;
+                    }
+                }
+
+//              Yellow robot
+                if(Team_UFRBots && quadrante == "QUADRANT 3")
+                {
+                    // First creating an placement command for the blue team
+                    VSSRef::team_to_ref::VSSRef_Placement placementCommandYellow;
+                    VSSRef::Frame *placementFrameYellow = new VSSRef::Frame();
+                    placementFrameYellow->set_teamcolor(VSSRef::Color::YELLOW);
+
+                    for(int x = 0; x < 3; x++){
+                        VSSRef::Robot *robot = placementFrameYellow->add_robots();
+                        robot->set_robot_id(x);
+                        if (x==0)
+                        {
+                            robot->set_x(0.68);
+                            robot->set_y(-0.16);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==1)
+                        {
+                            robot->set_x(-0.1);
+                            robot->set_y(0.25);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==2)
+                        {
+                            robot->set_x(-0.18);
+                            robot->set_y(-0.40);
+                            robot->set_orientation(0.0);
+                        }
+
+                    }
+
+                    placementCommandYellow.set_allocated_world(placementFrameYellow);
+
+                    // Sending yellow
+                    std::string msgYellow;
+                    placementCommandYellow.SerializeToString(&msgYellow);
+                    if(replacerSocket->write(msgYellow.c_str(), msgYellow.length()) == -1){
+                        std::cout << "[Example] Failed to write to replacer socket: " << replacerSocket->errorString().toStdString() << std::endl;
+                    }
+
+                }
+
+                if(Team_UFRBots && quadrante == "QUADRANT 4")
+                {
+                    // First creating an placement command for the blue team
+                    VSSRef::team_to_ref::VSSRef_Placement placementCommandYellow;
+                    VSSRef::Frame *placementFrameYellow = new VSSRef::Frame();
+                    placementFrameYellow->set_teamcolor(VSSRef::Color::YELLOW);
+
+                    for(int x = 0; x < 3; x++){
+                        VSSRef::Robot *robot = placementFrameYellow->add_robots();
+                        robot->set_robot_id(x);
+                        if (x==0)
+                        {
+                            robot->set_x(0.68);
+                            robot->set_y(-0.16);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==1)
+                        {
+                            robot->set_x(0.31);
+                            robot->set_y(0.13);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==2)
+                        {
+                            robot->set_x(0.6);
+                            robot->set_y(-0.4);
+                            robot->set_orientation(0.0);
+                        }
+
+                    }
+
+                    placementCommandYellow.set_allocated_world(placementFrameYellow);
+
+                    // Sending yellow
+                    std::string msgYellow;
+                    placementCommandYellow.SerializeToString(&msgYellow);
+                    if(replacerSocket->write(msgYellow.c_str(), msgYellow.length()) == -1){
+                        std::cout << "[Example] Failed to write to replacer socket: " << replacerSocket->errorString().toStdString() << std::endl;
+                    }
+
+                }
+
+                if(Team_UFRBots && tipo_falta == "PENALTY_KICK" && time_falta == "YELLOW")
+                {
+                    // First creating an placement command for the yellow team
+                    VSSRef::team_to_ref::VSSRef_Placement placementCommandYellow;
+                    VSSRef::Frame *placementFrameYellow = new VSSRef::Frame();
+                    placementFrameYellow->set_teamcolor(VSSRef::Color::YELLOW);
+
+                    penalty = true;
+
+                    for(int x = 0; x < 3; x++){
+                        VSSRef::Robot *robot = placementFrameYellow->add_robots();
+                        robot->set_robot_id(x);
+                        if (x==0)
+                        {
+                            robot->set_x(0.7);
+                            robot->set_y(0.0);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==1)
+                        {
+                            robot->set_x(-0.31);
+                            robot->set_y(-0.01);
+                            robot->set_orientation(0.0);
+                        }
+                        if (x==2)
+                        {
+                            robot->set_x(0.05);
+                            robot->set_y(-0.18);
+                            robot->set_orientation(0.0);
+                        }
+
+                    }
+
+                    placementCommandYellow.set_allocated_world(placementFrameYellow);
+
+                    // Sending yellow
+                    std::string msgYellow;
+                    placementCommandYellow.SerializeToString(&msgYellow);
+                    if(replacerSocket->write(msgYellow.c_str(), msgYellow.length()) == -1){
                         std::cout << "[Example] Failed to write to replacer socket: " << replacerSocket->errorString().toStdString() << std::endl;
                     }
                 }
@@ -704,13 +834,27 @@ int main(int argc, char *argv[])
                                 {
                                     if(ball.y() > 65)
                                     {
-                                        Objective parado = Objective(20, 86, 0);
-                                        PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                        if(robot.y() >= 86)
+                                        {
+                                            commandClient.sendCommand(0, 0, Team_UFRBots, i);
+                                        }
+                                        else
+                                        {
+                                            Objective parado = Objective(20, 86, 0);
+                                            PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                        }
                                     }
                                     if(ball.y() <= 65)
                                     {
-                                        Objective parado = Objective(20, 44, 0);
-                                        PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                        if(robot.y() <= 44)
+                                        {
+                                            commandClient.sendCommand(0, 0, Team_UFRBots, i);
+                                        }
+                                        else
+                                        {
+                                            Objective parado = Objective(20, 44, 0);
+                                            PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                        }
                                     }
                                 }
                             }
@@ -724,7 +868,7 @@ int main(int argc, char *argv[])
                                     PID(robot, o, i, commandClient, Team_UFRBots, 10);
                                 }
                                 else if (penalty && i==1){
-                                    printf("TAMO AQUI");
+//                                    printf("TAMO AQUI");
                                     commandClient.sendCommand(-30, 30, Team_UFRBots, i);
                                     penalty = false;
                                 }
@@ -809,99 +953,116 @@ int main(int argc, char *argv[])
                     if(Team_UFRBots)
                     {
 
+                        // Se for o robo 0
                         if(i == 0)
                         {
-                            if(ball.x() > 135 && ball.y() >= 47 && ball.y() <= 93)
+                            if(ball.x() >= 125 && ball.y() >= 44 && ball.y() <= 86)
                             {
-                                Objective defensor = defineObjectiveYellow(robot, ball);
-                                PID(robot, defensor, i, commandClient, Team_UFRBots, 0);
+                                Objective defensor = defineObjective(robot, ball);
+                                PID(robot, defensor, i, commandClient, Team_UFRBots, 5);
                             }
 
-                            if(ball.y() > 88 && ball.x() < 135)
+                            else if(ball.y() > 86 && ball.x() < 125)
                             {
-                                Objective parado = Objective(153, 85, 0);
+                                Objective parado = Objective(150, 86, 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots, 0);
                             }
 
-                            if(ball.y() < 52 && ball.x() < 135)
+                            else if(ball.y() < 44 && ball.x() < 125)
                             {
-                                Objective parado = Objective(153, 55, 0);
+                                Objective parado = Objective(150, 44, 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots, 0);
                             }
 
-                            if(ball.y() >= 52 && ball.y() <= 88 && ball.x() < 135)
+                            else if(ball.x() < 125 && ball.y() >= 44 && ball.y() <= 86)
                             {
-                                Objective parado = Objective(153, ball.y(), 0);
+                                Objective parado = Objective(150, ball.y(), 0);
                                 PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                            }
+                            else
+                            {
+                                if(ball.y() > 65)
+                                {
+                                    Objective parado = Objective(150, 86, 0);
+                                    PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                }
+                                if(ball.y() <= 65)
+                                {
+                                    Objective parado = Objective(150, 44, 0);
+                                    PID(robot, parado, i, commandClient, Team_UFRBots, 0);
+                                }
                             }
                         }
-
 
                         else
                         {
 
-                            if(ball.y() >= 64 && i == 1) {
-                                Objective o = defineObjectiveYellow(robot, ball);
-                                PID(robot, o, i, commandClient, Team_UFRBots, 0);
+//                          Se robo 1 no campo de ataque e bola no lado esquerdo
+                            if(ball.y() >= 64 && ball.x() < 125 && i == 1 && !penalty) {
+                                Objective o = defineObjective(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots, 10);
                             }
 
-                            if(ball.y() < 64 && ball.x() < 86 && i == 2) {
-                                Objective o = defineObjectiveYellow(robot, ball);
-                                PID(robot, o, i, commandClient, Team_UFRBots, 0);
+                            else if (penalty && i == 1){
+                                commandClient.sendCommand(-30, 30, Team_UFRBots, i);
+                                penalty = false;
                             }
 
-                            if(ball.y() < 65 && i == 1) {
-                                Objective marcadorAvancado = Objective(85, ball.y(), 0);
+//                          Se robo 2 no campo de ataque e bola no lado direito
+                            else if(ball.y() < 64 && ball.x() < 84 && i == 2) {
+                                Objective o = defineObjective(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots, 10);
+                            }
+
+//                          Se robo 1 no campo de defesa e bola no lado esquerdo
+                            else if(ball.y() < 64 && ball.x() >= 85 && ball.x() < 140 && i == 1 && !penalty) {
+                                Objective marcadorAvancado = Objective(ball.x(), 96, 0);
                                 PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots, 0);
                             }
 
-                            if(ball.y() >= 65 && ball.x() < 86 && i == 2) {
-                                Objective marcadorRecuado = Objective(100, ball.y(), 0);
+//                          Se robo 1 no campo de ataque e bola no lado esquerdo
+                            else if(ball.y() < 64 && ball.x() < 85 && i == 1 && !penalty) {
+                                Objective marcadorAvancado = Objective((ball.x()+20), 96, 0);
+                                PID(robot, marcadorAvancado, i, commandClient, Team_UFRBots, 0);
+                            }
+
+//                          Se robo 2 no campo de defesa e bola no lado esquerdo
+                            else if(ball.y() >= 64 && ball.x() >= 85 && i == 2) {
+                                Objective marcadorRecuado = Objective(ball.x(), 32, 0);
                                 PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots, 0);
                             }
 
-                            if(ball.x() >= 86 && i == 2) {
-                                Objective o = defineObjectiveYellow(robot, ball);
+//                                Se robo 2 no campo de ataque e bola no lado esquerdo
+//                                mas antes da pequena area
+                            else if(ball.y() >= 64 && ball.x() < 85 && i == 2) {
+                                Objective marcadorRecuado = Objective((ball.x()+20), 32, 0);
+                                PID(robot, marcadorRecuado, i, commandClient, Team_UFRBots, 0);
+                            }
+
+//                                Se robo 2 no campo de ataque e bola no lado esquerdo
+//                                mas na pequena area do adversario
+//                                else if(ball.y() >= 64 && ball.x() > 125 && i == 2) {
+//                                    Objective o = defineObjective(robot, ball);
+//                                    PID(robot, o, i, commandClient, Team_UFRBots);
+//                                }
+
+//                          Condicao de movimento para freeball quadrante Q1
+                            else if(ball.x() <= 125 && ball.x() >= 86 && ball.y() > 65 && i == 1 && !penalty) {
+                                Objective o = defineObjective(robot, ball);
                                 PID(robot, o, i, commandClient, Team_UFRBots, 0);
                             }
+
+//                                Condicao de movimento para freeball quadrante Q4
+                            else if(ball.x() <= 125 && ball.x() >= 86 && ball.y() <= 65 && i == 2 ) {
+                                Objective o = defineObjective(robot, ball);
+                                PID(robot, o, i, commandClient, Team_UFRBots, 0);
+                            }
+
+                            else
+                            {
+                                commandClient.sendCommand(0, 0, Team_UFRBots, i);
+                            }
                         }
-
-                        // Se for o robo 0
-//                        if(i == 0)
-//                        {
-//                            if(ball.x() > 120)
-//                            {
-//                                Objective defensor = defineObjective(robot, ball, Team_UFRBots);
-//                                PID(robot, defensor, 0, commandClient, Team_UFRBots);
-//                            }
-//                            else
-//                            {
-//                                Objective parado = Objective(155, 65, 0);
-//                                PID(robot, parado, 0, commandClient, Team_UFRBots);
-//                            }
-//                        }
-//                        // Caso contrário, robo 1 e 2
-//                        else
-//                        {
-//                            Objective o = defineObjective(robot, ball, Team_UFRBots);
-
-//                            if(ball.y() >= 65 && i == 1) {
-//                                PID(robot, o, i, commandClient, Team_UFRBots);
-//                            }
-//                            if(ball.y() < 65 && i == 2) {
-//                                PID(robot, o, i, commandClient, Team_UFRBots);
-//                            }
-//                            if(ball.x() >= 86 && i == 2) {
-//                                PID(robot, o, i, commandClient, Team_UFRBots);
-//                            }
-//                        }
-//                    }
-//                }
-//                    else
-//                    {
-//                        commandClient.sendCommand(0, 0, Team_UFRBots, i);
-//                    }
-
 
 
                     }
